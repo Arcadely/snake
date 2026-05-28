@@ -1,5 +1,7 @@
 package za.co.datumza.snake;
 
+import za.co.datumza.snake.game.SnakeGame;
+
 import javax.swing.*;
 
 public class App {
@@ -14,6 +16,10 @@ public class App {
 //        frame.setLocation(null);
         frame.setResizable(false);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        SnakeGame snakeGame = new SnakeGame(BOARD_WIDTH, BOARD_HEIGHT);
+        frame.add(snakeGame);
+        frame.pack();
     }
 }
 
