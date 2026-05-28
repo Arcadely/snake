@@ -10,18 +10,25 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.util.List;
 import java.util.Random;
 
 public class SnakeGame extends JPanel implements ActionListener, KeyListener {
     private final int REFRESH = 100;
+    private final int MAX_STATES = 5000;
+    private final int STATE_INCREMENT = 10;
+    private final int SCORE_MULTIPLIER = 5;
+    private final boolean isEndless = true;
     private final int boardWidth;
     private final int boardHeight;
     private final int tileSize = Tile.getTileSize();
     private final Random random = new Random();
     private final Timer gameLoop =  new Timer(REFRESH, this);
 
-    private boolean isGameOver = false;
+    private int currentState = 0;
     private boolean isPaused = false;
+
+    private List<Snake> snakes;
     private Snake snake;
     private Food food;
 
@@ -31,8 +38,17 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
 
         setupBoard();
 
+        snake = new Snake("Player", Color.pink, boardWidth, boardHeight, isEndless, random);
+
         // Players + Food
-        snake = new Snake(boardWidth, boardHeight, random);
+        snakes = List.of(
+                new Snake("1", Color.green, boardWidth, boardHeight, isEndless, random),
+                new Snake("2", Color.yellow, boardWidth, boardHeight, isEndless, random),
+                new Snake("3", Color.red, boardWidth, boardHeight, isEndless, random),
+                new Snake("4", Color.blue, boardWidth, boardHeight, isEndless, random),
+                snake
+        );
+
         food = new Food(boardWidth, boardHeight, random);
 
         // Loop game every N ms
@@ -44,6 +60,8 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
         // drawGrid(g);
         drawFood(g);
         drawSnake(g);
+
+        showData(g);
     }
 
     private void setupBoard() {
@@ -54,11 +72,13 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
     }
 
     private void drawSnake(Graphics g) {
-        snake.draw(g, Color.green);
+        for (Snake snake : snakes) {
+            snake.draw(g);
+        }
     }
 
     private void drawFood(Graphics g) {
-        food.draw(g, Color.red);
+        food.draw(g, Color.green);
     }
 
     private void drawGrid(Graphics g) {
@@ -69,23 +89,60 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
     }
 
     private void move() {
+        boolean hasEaten = false;
+
         if (isPaused) {
             return;
         }
 
-        if (snake.move(food)) {
+        for (Snake snake : snakes) {
+            hasEaten = snake.move(food) || hasEaten;
+        }
+
+        if (hasEaten) {
             food.move();
         }
+
+        currentState += STATE_INCREMENT;
+    }
+
+    private void showData(Graphics g) {
+        g.setFont(new Font("Arial", Font.PLAIN, 16));
+
+        showGameState(g);
+
+        for (int i = 0; i < snakes.size(); i++) {
+            showPlayerScore(g, snakes.get(i), i + 1);
+        }
+    }
+
+    private void showGameState(Graphics g) {
+        String info = isEndless ? String.format("State: %d", currentState) : String.format("State: %d/%d", currentState, MAX_STATES);
+
+        g.setColor(Color.white);
+        g.drawString(info, tileSize, tileSize + 16);
+    }
+
+    private void showPlayerScore(Graphics g, Snake snake, int index) {
+        String info = isEndless ? String.format("%s: %d", snake.getName(), snake.getMaxPoints() * SCORE_MULTIPLIER) : String.format("%s (%d Lives): %d", snake.getName(), snake.getLives(), snake.getMaxPoints() * SCORE_MULTIPLIER);
+
+        g.setColor(snake.getColor());
+        g.drawString(info, tileSize, tileSize + 25 + (22 * index));
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
+        if ((isGameOver() || (currentState >= MAX_STATES)) && !isEndless) {
+            gameLoop.stop();
+            return;
+        }
+
         move();
         repaint();
+    }
 
-        if (isGameOver) {
-            gameLoop.stop();
-        }
+    private boolean isGameOver() {
+        return snakes.stream().anyMatch(s -> !s.getIsAlive());
     }
 
     @Override

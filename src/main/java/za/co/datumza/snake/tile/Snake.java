@@ -1,32 +1,56 @@
 package za.co.datumza.snake.tile;
 
+import lombok.Getter;
+
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Random;
 
 public class Snake extends Tile {
+    @Getter
+    private  int maxPoints = 0;
+
+    @Getter
+    private  int totalPoints = 0;
+
+    @Getter
     private ArrayList<Tile> body = new ArrayList<>();
+
+    @Getter
+    private String name;
 
     private int velocityX = 1;
     private int velocityY = 0;
     private  int size = 0;
+
+    @Getter
     private int lives = 1;
     private boolean isAlive = true;
 
-    private final boolean isEndless = true;
+    private final boolean isEndless;
     private final int INITIAL_SIZE = 3;
     private final int boardWidth;
     private final int boardHeight;
     private final Random random;
 
-    public Snake(int boardWidth, int boardHeight, Random random) {
+    @Getter
+    private final Color color;
+
+    public Snake(String name, Color color, int boardWidth, int boardHeight, boolean isEndless, Random random) {
         super(0, 0);
 
+        this.name = name;
+        this.color = color;
         this.boardWidth = boardWidth;
         this.boardHeight = boardHeight;
         this.random = random;
+        this.isEndless = isEndless;
 
         initialise();
+    }
+
+    public boolean getIsAlive() {
+        return isAlive || lives > 0 || isEndless;
     }
 
     // returns boolean - is food eaten
@@ -69,9 +93,9 @@ public class Snake extends Tile {
         this.velocityX = 0;
     }
 
-    public void draw(Graphics g, Color color) {
+    public void draw(Graphics g) {
         if (isAlive) {
-            super.draw(g, color);
+            super.draw(g, this.color);
 
             for (Tile bodyPart : body) {
                 g.fillRect(bodyPart.convertX(), bodyPart.convertY(), tileSize, tileSize );
@@ -116,7 +140,10 @@ public class Snake extends Tile {
 
         if (hasEaten) {
             body.add(new Tile(food));
+            ++totalPoints;
+            maxPoints = Math.max(maxPoints, totalPoints);
         }
+
         return hasEaten;
     }
 
