@@ -3,13 +3,22 @@ package za.co.datumza.snake.tile;
 import java.util.Random;
 
 public class Food extends Tile {
-    public Food(int x, int y) {
-        super(x, y);
-    }
+    private final int boardWidth;
+    private final int boardHeight;
+    private final Random random;
 
     public Food(int boardWidth, int boardHeight, Random random) {
-        int x = random.nextInt(boardWidth/tileSize);
-        int y = random.nextInt(boardHeight/tileSize);
-        super(x, y);
+        this.boardWidth = boardWidth;
+        this.boardHeight = boardHeight;
+        this.random = random;
+
+
+        super(0, 0);
+        move();
+    }
+
+    public void move() {
+        x = random.nextInt(boardWidth/tileSize);
+        y = random.nextInt(boardHeight/tileSize);
     }
 }

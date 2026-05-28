@@ -20,8 +20,10 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
     private final Random random = new Random();
     private final Timer gameLoop =  new Timer(REFRESH, this);
 
-    Snake snake;
-    Food food;
+    private boolean isGameOver = false;
+    private boolean isPaused = false;
+    private Snake snake;
+    private Food food;
 
     public SnakeGame(int boardWidth, int boadrHeight) {
         this.boardWidth = boardWidth;
@@ -40,8 +42,8 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
         // drawGrid(g);
-        drawSnake(g);
         drawFood(g);
+        drawSnake(g);
     }
 
     private void setupBoard() {
@@ -67,7 +69,13 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
     }
 
     private void move() {
-        snake.move();
+        if (isPaused) {
+            return;
+        }
+
+        if (snake.move(food)) {
+            food.move();
+        }
     }
 
     @Override
@@ -78,6 +86,15 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
 
     @Override
     public void keyPressed(KeyEvent e) {
+        if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+            isPaused = !isPaused;
+            return;
+        }
+
+        if (isPaused) {
+            return;
+        }
+
         switch (e.getKeyCode()) {
             case KeyEvent.VK_LEFT, KeyEvent.VK_A:
                 snake.setVelocityX(-1);
