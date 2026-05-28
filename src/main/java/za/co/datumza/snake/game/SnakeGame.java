@@ -1,20 +1,25 @@
 package za.co.datumza.snake.game;
 
 import za.co.datumza.snake.tile.Food;
+import za.co.datumza.snake.tile.Snake;
 import za.co.datumza.snake.tile.Tile;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.Random;
 
-public class SnakeGame extends JPanel {
+public class SnakeGame extends JPanel implements ActionListener {
+    private final int REFRESH = 100;
     private final int boardWidth;
     private final int boardHeight;
     private final int tileSize = Tile.getTileSize();
     private final Random random = new Random();
+    private final Timer gameLoop =  new Timer(REFRESH, this);
 
-    Tile snakeHead;
-    Tile food;
+    Snake snakeHead;
+    Food food;
 
     public SnakeGame(int boardWidth, int boadrHeight) {
         this.boardWidth = boardWidth;
@@ -22,8 +27,12 @@ public class SnakeGame extends JPanel {
 
         setupBoard();
 
-        snakeHead = new Tile(5, 5);
+        // Players + Food
+        snakeHead = new Snake(5, 5);
         food = new Food(boardWidth, boardHeight, random);
+
+        // Loop game every N ms
+        gameLoop.start();
     }
 
     public void paintComponent(Graphics g) {
@@ -51,5 +60,15 @@ public class SnakeGame extends JPanel {
             g.drawLine(i * tileSize, 0, i * tileSize, boardHeight);
             g.drawLine(0, i * tileSize, boardWidth, i * tileSize);
         }
+    }
+
+    private void move() {
+        snakeHead.move();
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        move();
+        repaint();
     }
 }

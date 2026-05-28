@@ -13,8 +13,8 @@ public class Tile {
     @Getter
     protected static final int tileSize = 10;
 
-    private int x;
-    private int y;
+    protected int x;
+    protected int y;
 
     public int convert(int value) {
         return value * tileSize;
