@@ -1,4 +1,4 @@
-package za.co.datumza.snake.game;
+package za.co.datumza.snake.tile;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -11,7 +11,7 @@ import java.awt.*;
 @AllArgsConstructor
 public class Tile {
     @Getter
-    private static final int tileSize = 10;
+    protected static final int tileSize = 10;
 
     private int x;
     private int y;
