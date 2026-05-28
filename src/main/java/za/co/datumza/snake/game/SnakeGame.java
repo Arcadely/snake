@@ -32,7 +32,7 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
         setupBoard();
 
         // Players + Food
-        snake = new Snake(5, 5);
+        snake = new Snake(boardWidth, boardHeight, random);
         food = new Food(boardWidth, boardHeight, random);
 
         // Loop game every N ms
@@ -82,6 +82,10 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
     public void actionPerformed(ActionEvent e) {
         move();
         repaint();
+
+        if (isGameOver) {
+            gameLoop.stop();
+        }
     }
 
     @Override

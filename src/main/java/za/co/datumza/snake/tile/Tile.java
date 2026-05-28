@@ -37,9 +37,4 @@ public class Tile {
         g.setColor(color);
         g.fillRect(convert(x), convert(y), tileSize, tileSize);
     }
-
-    public void move(int x, int y) {
-        this.x = x;
-        this.y = y;
-    }
 }
