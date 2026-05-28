@@ -8,9 +8,11 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.util.Random;
 
-public class SnakeGame extends JPanel implements ActionListener {
+public class SnakeGame extends JPanel implements ActionListener, KeyListener {
     private final int REFRESH = 100;
     private final int boardWidth;
     private final int boardHeight;
@@ -18,7 +20,7 @@ public class SnakeGame extends JPanel implements ActionListener {
     private final Random random = new Random();
     private final Timer gameLoop =  new Timer(REFRESH, this);
 
-    Snake snakeHead;
+    Snake snake;
     Food food;
 
     public SnakeGame(int boardWidth, int boadrHeight) {
@@ -28,7 +30,7 @@ public class SnakeGame extends JPanel implements ActionListener {
         setupBoard();
 
         // Players + Food
-        snakeHead = new Snake(5, 5);
+        snake = new Snake(5, 5);
         food = new Food(boardWidth, boardHeight, random);
 
         // Loop game every N ms
@@ -45,10 +47,12 @@ public class SnakeGame extends JPanel implements ActionListener {
     private void setupBoard() {
         setPreferredSize(new Dimension(boardWidth, boardHeight));
         setBackground(Color.black);
+        addKeyListener(this);
+        setFocusable(true);
     }
 
     private void drawSnake(Graphics g) {
-        snakeHead.draw(g, Color.green);
+        snake.draw(g, Color.green);
     }
 
     private void drawFood(Graphics g) {
@@ -63,12 +67,46 @@ public class SnakeGame extends JPanel implements ActionListener {
     }
 
     private void move() {
-        snakeHead.move();
+        snake.move();
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
         move();
         repaint();
+    }
+
+    @Override
+    public void keyPressed(KeyEvent e) {
+        switch (e.getKeyCode()) {
+            case KeyEvent.VK_LEFT, KeyEvent.VK_A:
+                snake.setVelocityX(-1);
+                break;
+
+            case KeyEvent.VK_RIGHT, KeyEvent.VK_D:
+                snake.setVelocityX(1);
+                break;
+
+            case KeyEvent.VK_UP, KeyEvent.VK_W:
+                snake.setVelocityY(-1);
+                break;
+
+            case KeyEvent.VK_DOWN, KeyEvent.VK_S:
+                snake.setVelocityY(1);
+                break;
+
+            default:
+                break;
+        }
+    }
+
+    @Override
+    public void keyTyped(KeyEvent e) {
+        //dont need
+    }
+
+    @Override
+    public void keyReleased(KeyEvent e) {
+        // dont need
     }
 }
