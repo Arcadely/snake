@@ -1,6 +1,6 @@
 package za.co.datumza.snake.util;
 
-import za.co.datumza.snake.state.Square;
+import za.co.datumza.snake.board.Square;
 
 import java.util.Random;
 

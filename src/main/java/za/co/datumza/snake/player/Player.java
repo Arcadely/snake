@@ -1,18 +1,17 @@
 package za.co.datumza.snake.player;
 
 import lombok.Getter;
-import za.co.datumza.snake.state.Apple;
-import za.co.datumza.snake.state.Board;
-import za.co.datumza.snake.state.Square;
+import za.co.datumza.snake.board.Apple;
+import za.co.datumza.snake.board.Board;
+import za.co.datumza.snake.board.Square;
 
+@Getter
 public class Player {
     private int id;
 
     private Movement movement;
     private Square position;
     private boolean isAlive = true;
-
-    @Getter
     private Stats stats;
 
     public Player(int id, Square position) {
@@ -20,6 +19,7 @@ public class Player {
 
         this.id = id;
         this.position = position;
+        this.movement = new Movement(Direction.random());
     }
 
     public void changeDirection(Direction direction) {

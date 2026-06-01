@@ -1,25 +1,31 @@
-package za.co.datumza.snake.state;
+package za.co.datumza.snake.board;
 
+import lombok.Getter;
 import za.co.datumza.snake.player.Player;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class BoardState {
+@Getter
+public class State {
     private Board board;
     private List<Player> players;
     private Apple apple;
 
-    public BoardState(int boardWidth, int boardHeight, int playerCount) {
+    public State(int boardWidth, int boardHeight, int playerCount) {
         this.board = new Board(boardWidth, boardHeight);
         this.apple = new Apple(board.getOpenSquare());
 
         createPlayers(playerCount);
     }
 
-    private void progress() {
+    public void progress() {
         for (Player player : players) {
             player.move(board, apple);
+        }
+
+        if (apple.isEaten()) {
+            apple.move(board.getOpenSquare());
         }
     }
 

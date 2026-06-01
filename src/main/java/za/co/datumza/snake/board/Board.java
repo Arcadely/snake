@@ -1,4 +1,4 @@
-package za.co.datumza.snake.state;
+package za.co.datumza.snake.board;
 
 import java.util.ArrayList;
 import java.util.List;

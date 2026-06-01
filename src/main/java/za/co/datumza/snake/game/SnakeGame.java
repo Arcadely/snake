@@ -1,8 +1,8 @@
 package za.co.datumza.snake.game;
 
-import za.co.datumza.snake.tile.Food;
+import za.co.datumza.snake.board.State;
+import za.co.datumza.snake.player.Player;
 import za.co.datumza.snake.tile.Snake;
-import za.co.datumza.snake.tile.Tile;
 
 import javax.swing.*;
 import java.awt.*;
@@ -10,10 +10,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-import java.util.List;
 import java.util.Random;
 
 public class SnakeGame extends JPanel implements ActionListener, KeyListener {
+    protected static final int tileSize = 10;
     private final int REFRESH = 100;
     private final int MAX_STATES = 5000;
     private final int STATE_INCREMENT = 10;
@@ -21,35 +21,23 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
     private final boolean isEndless = true;
     private final int boardWidth;
     private final int boardHeight;
-    private final int tileSize = Tile.getTileSize();
     private final Random random = new Random();
-    private final Timer gameLoop =  new Timer(REFRESH, this);
+    private final Timer gameLoop = new Timer(REFRESH, this);
 
     private int currentState = 0;
     private boolean isPaused = false;
 
-    private List<Snake> snakes;
-    private Snake snake;
-    private Food food;
+    private State state;
+    private Visualiser visualiser;
 
-    public SnakeGame(int boardWidth, int boadrHeight) {
+    public SnakeGame(int boardWidth, int boardHeight) {
         this.boardWidth = boardWidth;
-        this.boardHeight = boadrHeight;
+        this.boardHeight = boardHeight;
+
+        this.state = new State(boardWidth, boardHeight, 4); // todo
+        this.visualiser = new Visualiser(tileSize); // todo
 
         setupBoard();
-
-        snake = new Snake("Player", Color.pink, boardWidth, boardHeight, isEndless, random);
-
-        // Players + Food
-        snakes = List.of(
-                new Snake("1", Color.green, boardWidth, boardHeight, isEndless, random),
-                new Snake("2", Color.yellow, boardWidth, boardHeight, isEndless, random),
-                new Snake("3", Color.red, boardWidth, boardHeight, isEndless, random),
-                new Snake("4", Color.blue, boardWidth, boardHeight, isEndless, random),
-                snake
-        );
-
-        food = new Food(boardWidth, boardHeight, random);
 
         // Loop game every N ms
         gameLoop.start();
@@ -58,8 +46,8 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
         // drawGrid(g);
-        drawFood(g);
-        drawSnake(g);
+        drawApple(g);
+        drawPlayers(g);
 
         showData(g);
     }
@@ -71,38 +59,31 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
         setFocusable(true);
     }
 
-    private void drawSnake(Graphics g) {
-        for (Snake snake : snakes) {
-            snake.draw(g);
+    private void drawPlayers(Graphics g) {
+        for (Player player : state.getPlayers()) {
+            if (player.isAlive()) {
+                visualiser.draw(g, Color.red, player.getPosition());
+            }
         }
     }
 
-    private void drawFood(Graphics g) {
-        food.draw(g, Color.green);
+    private void drawApple(Graphics g) {
+        visualiser.draw(g, Color.green, state.getApple().getPosition());
     }
 
     private void drawGrid(Graphics g) {
-        for (int i = 0; i < boardWidth/tileSize; i++) {
+        for (int i = 0; i < boardWidth / tileSize; i++) {
             g.drawLine(i * tileSize, 0, i * tileSize, boardHeight);
             g.drawLine(0, i * tileSize, boardWidth, i * tileSize);
         }
     }
 
     private void move() {
-        boolean hasEaten = false;
-
         if (isPaused) {
             return;
         }
 
-        for (Snake snake : snakes) {
-            hasEaten = snake.move(food) || hasEaten;
-        }
-
-        if (hasEaten) {
-            food.move();
-        }
-
+        state.progress();
         currentState += STATE_INCREMENT;
     }
 
@@ -111,9 +92,9 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
 
         showGameState(g);
 
-        for (int i = 0; i < snakes.size(); i++) {
-            showPlayerScore(g, snakes.get(i), i + 1);
-        }
+//        for (int i = 0; i < snakes.size(); i++) {
+//            showPlayerScore(g, snakes.get(i), i + 1);
+//        }
     }
 
     private void showGameState(Graphics g) {
@@ -142,7 +123,8 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
     }
 
     private boolean isGameOver() {
-        return snakes.stream().anyMatch(s -> !s.getIsAlive());
+//        return snakes.stream().anyMatch(s -> !s.getIsAlive());
+        return false;
     }
 
     @Override
@@ -156,26 +138,26 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
             return;
         }
 
-        switch (e.getKeyCode()) {
-            case KeyEvent.VK_LEFT, KeyEvent.VK_A:
-                snake.setVelocityX(-1);
-                break;
-
-            case KeyEvent.VK_RIGHT, KeyEvent.VK_D:
-                snake.setVelocityX(1);
-                break;
-
-            case KeyEvent.VK_UP, KeyEvent.VK_W:
-                snake.setVelocityY(-1);
-                break;
-
-            case KeyEvent.VK_DOWN, KeyEvent.VK_S:
-                snake.setVelocityY(1);
-                break;
-
-            default:
-                break;
-        }
+//        switch (e.getKeyCode()) {
+//            case KeyEvent.VK_LEFT, KeyEvent.VK_A:
+//                snake.setVelocityX(-1);
+//                break;
+//
+//            case KeyEvent.VK_RIGHT, KeyEvent.VK_D:
+//                snake.setVelocityX(1);
+//                break;
+//
+//            case KeyEvent.VK_UP, KeyEvent.VK_W:
+//                snake.setVelocityY(-1);
+//                break;
+//
+//            case KeyEvent.VK_DOWN, KeyEvent.VK_S:
+//                snake.setVelocityY(1);
+//                break;
+//
+//            default:
+//                break;
+//    }
     }
 
     @Override
