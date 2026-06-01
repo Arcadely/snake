@@ -87,7 +87,11 @@ public class State {
         respawnDeadPlayers();
 
         for (Apple apple : apples) {
-            if (apple.isEaten()) {
+            if (!apple.isEaten()) {
+                apple.tick();
+            }
+
+            if (apple.isEaten() || apple.isExpired()) {
                 apple.move(board.getOpenSquare(), getNextAppleType(apple));
             }
         }

@@ -33,6 +33,14 @@ public class Apple {
         position.block(player.getId());
     }
 
+    public void tick() {
+        --this.timer;
+    }
+
+    public boolean isExpired() {
+        return timer <= 0;
+    }
+
     private void resetTimer() {
         this.timer = TIMER;
     }
