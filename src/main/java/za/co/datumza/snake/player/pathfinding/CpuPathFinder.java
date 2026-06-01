@@ -162,7 +162,7 @@ public class CpuPathFinder {
     private Square findClosestPlayerSquare(Player zombie, List<Player> players) {
         return players.stream()
                 .filter(player -> player.isPlayer() && player.isAlive())
-                .flatMap(player -> player.getBody().stream())
+                .map(Player::getHead)
                 .min(Comparator.comparingInt(square -> distance(zombie.getHead(), square)))
                 .orElse(null);
     }

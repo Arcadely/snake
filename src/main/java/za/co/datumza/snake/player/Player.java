@@ -151,7 +151,7 @@ public class Player {
         return this.body.getLast();
     }
 
-    private void respawn(Board board) {
+    public void respawn(Board board) {
         Direction direction = Direction.random();
         this.movement = new Movement(direction);
         initialise(board.getOpenSnakeHead(DEFAULT_SIZE, direction), board);

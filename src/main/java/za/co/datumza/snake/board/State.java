@@ -9,11 +9,13 @@ import za.co.datumza.snake.player.pathfinding.PathFindingAlgorithm;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Getter
 public class State {
     private final int MAX_STATES = 50000;
     private final int STATE_INCREMENT = 1;
+    private static final double MAX_POISON_APPLE_RATIO = 0.4;
     private static final int ZOMBIE_MOVE_INTERVAL = 2;
     private static final PathFindingAlgorithm[] CPU_ALGORITHMS = {
             PathFindingAlgorithm.GREEDY,
@@ -61,8 +63,8 @@ public class State {
         updateCpuPlayers(movingPlayers);
 
         List<Square> nextSquares = getNextSquares(movingPlayers);
-        checkBlockedSquareCollisions(nextSquares);
-        checkHeadOnCollisions(nextSquares);
+        checkBlockedSquareCollisions(nextSquares, movingPlayers);
+        checkHeadOnCollisions(nextSquares, movingPlayers);
 
         for (Player player : players) {
             if (!player.isAlive()) {
@@ -82,10 +84,11 @@ public class State {
 
         cleanupSquares.clear();
         cleanupPlayerIds.clear();
+        respawnDeadPlayers();
 
         for (Apple apple : apples) {
             if (apple.isEaten()) {
-                apple.move(board.getOpenSquare());
+                apple.move(board.getOpenSquare(), getNextAppleType(apple));
             }
         }
 
@@ -116,6 +119,7 @@ public class State {
         for (int i = 0; i < playerCount; i++) {
             Apple apple = new Apple(board.getOpenSquare());
             this.apples.add(apple);
+            apple.move(apple.getPosition(), getNextAppleType(apple));
         }
     }
 
@@ -127,6 +131,14 @@ public class State {
         for (Square square : player.getBody()) {
             cleanupSquares.add(square);
             cleanupPlayerIds.add(player.getId());
+        }
+    }
+
+    private void respawnDeadPlayers() {
+        for (Player player : players) {
+            if (!player.isAlive()) {
+                player.respawn(board);
+            }
         }
     }
 
@@ -175,6 +187,7 @@ public class State {
                 nextSquares.add(player.getNextSquare(board));
             } catch (Exception e) {
                 player.die(board);
+                movingPlayers.set(i, false);
                 nextSquares.add(null);
             }
         }
@@ -182,28 +195,34 @@ public class State {
         return nextSquares;
     }
 
-    private void checkBlockedSquareCollisions(List<Square> nextSquares) {
+    private void checkBlockedSquareCollisions(List<Square> nextSquares, List<Boolean> movingPlayers) {
         for (int i = 0; i < players.size(); i++) {
             Player player = players.get(i);
             Square nextSquare = nextSquares.get(i);
 
             if (player.isAlive() && nextSquare != null && nextSquare.isBlocked()) {
                 if (player.isZombie()) {
-                    awardZombieKills(player, nextSquare);
+                    if (isPlayerHeadCollision(nextSquare)) {
+                        awardZombieKills(player, nextSquare, movingPlayers);
+                    } else {
+                        movingPlayers.set(i, false);
+                        nextSquares.set(i, null);
+                    }
                 } else if (isLethalPlayerCollision(player, nextSquare)) {
                     player.die(board);
                     awardKills(player, nextSquare);
+                    movingPlayers.set(i, false);
                 }
             }
         }
     }
 
-    private void checkHeadOnCollisions(List<Square> nextSquares) {
+    private void checkHeadOnCollisions(List<Square> nextSquares, List<Boolean> movingPlayers) {
         for (int i = 0; i < players.size(); i++) {
             Player player = players.get(i);
             Square nextSquare = nextSquares.get(i);
 
-            if (!player.isAlive() || nextSquare == null) {
+            if (!movingPlayers.get(i) || !player.isAlive() || nextSquare == null) {
                 continue;
             }
 
@@ -214,21 +233,23 @@ public class State {
                 Player otherPlayer = players.get(j);
                 Square otherNextSquare = nextSquares.get(j);
 
-                if (otherPlayer.isAlive() && nextSquare.equals(otherNextSquare)) {
+                if (movingPlayers.get(j) && otherPlayer.isAlive() && nextSquare.equals(otherNextSquare)) {
                     collidingPlayers.add(otherPlayer);
                 }
             }
 
             if (collidingPlayers.size() > 1) {
-                awardHeadOnKills(collidingPlayers);
+                awardHeadOnKills(collidingPlayers, movingPlayers);
             }
         }
     }
 
-    private void awardHeadOnKills(List<Player> collidingPlayers) {
+    private void awardHeadOnKills(List<Player> collidingPlayers, List<Boolean> movingPlayers) {
         boolean hasZombie = collidingPlayers.stream().anyMatch(Player::isZombie);
 
         if (hasZombie) {
+            long zombieCount = collidingPlayers.stream().filter(Player::isZombie).count();
+
             for (Player killer : collidingPlayers) {
                 if (!killer.isZombie()) {
                     continue;
@@ -237,7 +258,16 @@ public class State {
                 for (Player victim : collidingPlayers) {
                     if (victim.isPlayer()) {
                         victim.die(board);
+                        movingPlayers.set(victim.getId(), false);
                         killer.kill();
+                    }
+                }
+            }
+
+            if (zombieCount > 1) {
+                for (Player zombie : collidingPlayers) {
+                    if (zombie.isZombie()) {
+                        movingPlayers.set(zombie.getId(), false);
                     }
                 }
             }
@@ -247,6 +277,7 @@ public class State {
 
         for (Player victim : collidingPlayers) {
             victim.die(board);
+            movingPlayers.set(victim.getId(), false);
         }
 
         for (Player killer : collidingPlayers) {
@@ -275,14 +306,14 @@ public class State {
     }
 
     private boolean isLethalPlayerCollision(Player victim, Square collisionSquare) {
+        return collisionSquare.isBlocked();
+    }
+
+    private boolean isPlayerHeadCollision(Square collisionSquare) {
         for (Integer playerId : collisionSquare.getPlayers()) {
-            Player blocker = players.get(playerId);
+            Player player = players.get(playerId);
 
-            if (blocker.getId() == victim.getId()) {
-                return true;
-            }
-
-            if (blocker.isPlayer() || blocker.getHead().equals(collisionSquare)) {
+            if (player.isPlayer() && player.getHead().equals(collisionSquare)) {
                 return true;
             }
         }
@@ -290,14 +321,44 @@ public class State {
         return false;
     }
 
-    private void awardZombieKills(Player zombie, Square collisionSquare) {
+    private void awardZombieKills(Player zombie, Square collisionSquare, List<Boolean> movingPlayers) {
         for (Integer playerId : collisionSquare.getPlayers()) {
             Player victim = players.get(playerId);
 
             if (victim.isPlayer() && victim.getHead().equals(collisionSquare)) {
                 victim.die(board);
+                movingPlayers.set(victim.getId(), false);
                 zombie.kill();
             }
         }
+    }
+
+    private AppleType getNextAppleType(Apple movingApple) {
+        int maxPoisonApples = (int) Math.floor(apples.size() * MAX_POISON_APPLE_RATIO);
+        int currentPoisonApples = getPoisonAppleCount();
+
+        if (movingApple.getType() == AppleType.POISONOUS) {
+            --currentPoisonApples;
+        }
+
+        if (currentPoisonApples >= maxPoisonApples) {
+            return AppleType.NORMAL;
+        }
+
+        return ThreadLocalRandom.current().nextDouble() < MAX_POISON_APPLE_RATIO
+                ? AppleType.POISONOUS
+                : AppleType.NORMAL;
+    }
+
+    private int getPoisonAppleCount() {
+        int count = 0;
+
+        for (Apple apple : apples) {
+            if (!apple.isEaten() && apple.getType() == AppleType.POISONOUS) {
+                ++count;
+            }
+        }
+
+        return count;
     }
 }

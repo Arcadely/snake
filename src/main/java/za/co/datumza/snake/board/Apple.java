@@ -18,8 +18,12 @@ public class Apple {
     }
 
     public void move(Square square) {
+        move(square, AppleType.NORMAL);
+    }
+
+    public void move(Square square, AppleType type) {
         this.position = square;
-        this.type = AppleType.random();
+        this.type = type;
         this.isEaten = false;
         resetTimer();
     }
