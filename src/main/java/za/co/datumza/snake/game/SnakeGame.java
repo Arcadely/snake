@@ -1,6 +1,7 @@
 package za.co.datumza.snake.game;
 
 import za.co.datumza.snake.board.Apple;
+import za.co.datumza.snake.board.AppleType;
 import za.co.datumza.snake.board.Square;
 import za.co.datumza.snake.board.State;
 import za.co.datumza.snake.player.Direction;
@@ -94,7 +95,8 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
 
     private void drawApples(Graphics g) {
         for (Apple apple : state.getApples()) {
-            visualiser.draw(g, Color.green, apple.getPosition());
+            Color color = apple.getType() == AppleType.NORMAL ? Color.green : new Color(220, 38, 38);
+            visualiser.draw(g, color, apple.getPosition());
         }
     }
 

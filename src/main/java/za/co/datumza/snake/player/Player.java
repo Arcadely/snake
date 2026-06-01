@@ -2,6 +2,7 @@ package za.co.datumza.snake.player;
 
 import lombok.Getter;
 import za.co.datumza.snake.board.Apple;
+import za.co.datumza.snake.board.AppleType;
 import za.co.datumza.snake.board.Board;
 import za.co.datumza.snake.board.Square;
 
@@ -76,10 +77,25 @@ public class Player {
 
             if (getHead().equals(applePosition)) {
                 apple.eat(this);
-                this.body.add(getTail());
-                this.stats.eat();
+
+                if (apple.getType() == AppleType.NORMAL) {
+                    this.body.add(getTail());
+                    this.stats.eat();
+                } else {
+                    shrink();
+                    this.stats.poison();
+                }
             }
         }
+    }
+
+    private void shrink() {
+        if (body.size() <= 1) {
+            return;
+        }
+
+        getTail().unblock(this.id);
+        body.removeLast();
     }
 
     public void die(Board board) {

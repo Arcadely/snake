@@ -1,6 +1,7 @@
 package za.co.datumza.snake.player.pathfinding;
 
 import za.co.datumza.snake.board.Apple;
+import za.co.datumza.snake.board.AppleType;
 import za.co.datumza.snake.board.Board;
 import za.co.datumza.snake.board.Square;
 import za.co.datumza.snake.player.Direction;
@@ -23,14 +24,14 @@ public class CpuPathFinder {
         Square target = findNearestApple(player.getHead(), apples);
 
         if (target == null) {
-            return chooseRandomSafeDirection(player, board);
+            return chooseRandomSafeDirection(player, board, apples);
         }
 
         return switch (algorithm) {
-            case RANDOM_SAFE -> chooseRandomSafeDirection(player, board);
-            case GREEDY -> chooseGreedyDirection(player, board, target);
-            case BREADTH_FIRST -> chooseBreadthFirstDirection(player, board, target);
-            case A_STAR -> chooseAStarDirection(player, board, target);
+            case RANDOM_SAFE -> chooseRandomSafeDirection(player, board, apples);
+            case GREEDY -> chooseGreedyDirection(player, board, target, apples);
+            case BREADTH_FIRST -> chooseBreadthFirstDirection(player, board, target, apples);
+            case A_STAR -> chooseAStarDirection(player, board, target, apples);
         };
     }
 
@@ -38,14 +39,14 @@ public class CpuPathFinder {
         Square target = findClosestPlayerSquare(zombie, players);
 
         if (target == null) {
-            return chooseRandomSafeDirection(zombie, board);
+            return chooseRandomSafeDirection(zombie, board, List.of());
         }
 
-        return chooseAStarDirection(zombie, board, target);
+        return chooseAStarDirection(zombie, board, target, List.of());
     }
 
-    private Direction chooseRandomSafeDirection(Player player, Board board) {
-        List<Direction> safeDirections = getSafeDirections(player, board);
+    private Direction chooseRandomSafeDirection(Player player, Board board, List<Apple> apples) {
+        List<Direction> safeDirections = getSafeDirections(player, board, apples);
 
         if (safeDirections.isEmpty()) {
             return player.getMovement().getDirection();
@@ -54,13 +55,13 @@ public class CpuPathFinder {
         return safeDirections.get(ThreadLocalRandom.current().nextInt(safeDirections.size()));
     }
 
-    private Direction chooseGreedyDirection(Player player, Board board, Square target) {
-        return getSafeDirections(player, board).stream()
+    private Direction chooseGreedyDirection(Player player, Board board, Square target, List<Apple> apples) {
+        return getSafeDirections(player, board, apples).stream()
                 .min(Comparator.comparingInt(direction -> distance(getNextSquare(player, board, direction), target)))
                 .orElse(player.getMovement().getDirection());
     }
 
-    private Direction chooseBreadthFirstDirection(Player player, Board board, Square target) {
+    private Direction chooseBreadthFirstDirection(Player player, Board board, Square target, List<Apple> apples) {
         Queue<Square> queue = new ArrayDeque<>();
         Set<Square> visited = new HashSet<>();
         Map<Square, Direction> firstSteps = new HashMap<>();
@@ -83,7 +84,7 @@ public class CpuPathFinder {
 
                 Square next = getNextSquare(board, current, direction);
 
-                if (next == null || visited.contains(next) || isBlocked(next, target)) {
+                if (next == null || visited.contains(next) || isBlocked(next, target, apples)) {
                     continue;
                 }
 
@@ -93,10 +94,10 @@ public class CpuPathFinder {
             }
         }
 
-        return chooseGreedyDirection(player, board, target);
+        return chooseGreedyDirection(player, board, target, apples);
     }
 
-    private Direction chooseAStarDirection(Player player, Board board, Square target) {
+    private Direction chooseAStarDirection(Player player, Board board, Square target, List<Apple> apples) {
         PriorityQueue<PathNode> open = new PriorityQueue<>(Comparator.comparingInt(PathNode::score));
         Map<Square, Integer> bestCosts = new HashMap<>();
 
@@ -118,7 +119,7 @@ public class CpuPathFinder {
 
                 Square next = getNextSquare(board, current.square(), direction);
 
-                if (next == null || isBlocked(next, target)) {
+                if (next == null || isBlocked(next, target, apples)) {
                     continue;
                 }
 
@@ -133,16 +134,16 @@ public class CpuPathFinder {
             }
         }
 
-        return chooseGreedyDirection(player, board, target);
+        return chooseGreedyDirection(player, board, target, apples);
     }
 
-    private List<Direction> getSafeDirections(Player player, Board board) {
+    private List<Direction> getSafeDirections(Player player, Board board, List<Apple> apples) {
         List<Direction> directions = new ArrayList<>();
 
         for (Direction direction : Direction.values()) {
             Square nextSquare = getNextSquare(player, board, direction);
 
-            if (!isOppositeDirection(player, direction) && nextSquare != null && nextSquare.isOpen()) {
+            if (!isOppositeDirection(player, direction) && nextSquare != null && nextSquare.isOpen() && !isPoisonousApple(nextSquare, apples)) {
                 directions.add(direction);
             }
         }
@@ -152,7 +153,7 @@ public class CpuPathFinder {
 
     private Square findNearestApple(Square head, List<Apple> apples) {
         return apples.stream()
-                .filter(apple -> !apple.isEaten())
+                .filter(apple -> !apple.isEaten() && apple.getType() == AppleType.NORMAL)
                 .map(Apple::getPosition)
                 .min(Comparator.comparingInt(apple -> distance(head, apple)))
                 .orElse(null);
@@ -187,8 +188,13 @@ public class CpuPathFinder {
         }
     }
 
-    private boolean isBlocked(Square square, Square target) {
-        return square.isBlocked() && !square.equals(target);
+    private boolean isBlocked(Square square, Square target, List<Apple> apples) {
+        return (square.isBlocked() && !square.equals(target)) || isPoisonousApple(square, apples);
+    }
+
+    private boolean isPoisonousApple(Square square, List<Apple> apples) {
+        return apples.stream()
+                .anyMatch(apple -> !apple.isEaten() && apple.getType() == AppleType.POISONOUS && apple.getPosition().equals(square));
     }
 
     private boolean isOppositeDirection(Player player, Direction direction) {

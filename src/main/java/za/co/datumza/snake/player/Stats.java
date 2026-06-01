@@ -6,6 +6,8 @@ import lombok.Setter;
 @Getter
 @Setter
 public class Stats {
+    private int score;
+    private int bestScore;
     private int lives;
     private int length;
     private int longestLength;
@@ -13,6 +15,8 @@ public class Stats {
     private int mostKills;
 
     public Stats() {
+        this.score = 0;
+        this.bestScore = 0;
         this.lives = 0;
         this.length = 0;
         this.longestLength = 0;
@@ -21,9 +25,16 @@ public class Stats {
     }
 
     public void eat() {
+        ++this.score;
         ++this.length;
 
+        this.bestScore = Math.max(this.score, this.bestScore);
         this.longestLength = Math.max(this.length, this.longestLength);
+    }
+
+    public void poison() {
+        --this.score;
+        this.length = Math.max(0, this.length - 1);
     }
 
     public void die() {
@@ -39,11 +50,11 @@ public class Stats {
     }
 
     public int getScoreValue(int lengthMultiplier, int killsMultiplier) {
-        return (this.length * lengthMultiplier) + (this.kills * killsMultiplier);
+        return this.score + (this.kills * killsMultiplier);
     }
 
     public int getMaxScoreValue(int lengthMultiplier, int killsMultiplier) {
-        return (this.longestLength * lengthMultiplier) + (this.mostKills * killsMultiplier);
+        return this.bestScore + (this.mostKills * killsMultiplier);
     }
 
     public String getScore(int lengthMultiplier, int killsMultiplier) {

@@ -7,6 +7,7 @@ import za.co.datumza.snake.player.Player;
 public class Apple {
     private final int TIMER = 500;
     private Square position;
+    private AppleType type;
     private boolean isEaten;
 
     @Getter
@@ -18,6 +19,7 @@ public class Apple {
 
     public void move(Square square) {
         this.position = square;
+        this.type = AppleType.random();
         this.isEaten = false;
         resetTimer();
     }
