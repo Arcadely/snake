@@ -51,6 +51,8 @@ public class State {
             square.getPlayers().clear();
         }
 
+        cleanupSquares.clear();
+
         for (Apple apple : apples) {
             if (apple.isEaten()) {
                 apple.move(board.getOpenSquare());

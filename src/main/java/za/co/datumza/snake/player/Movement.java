@@ -1,16 +1,23 @@
 package za.co.datumza.snake.player;
 
 import lombok.Getter;
-import lombok.Setter;
 
 @Getter
-@Setter
 public class Movement {
     private Direction direction;
     private int velocityX;
     private int velocityY;
 
     public Movement(Direction direction) {
+        this.direction = direction;
+        move(direction);
+    }
+
+    public void setDirection(Direction direction) {
+        if (isOppositeDirection(direction)) {
+            return;
+        }
+
         this.direction = direction;
         move(direction);
     }
@@ -57,5 +64,14 @@ public class Movement {
     public void right() {
         this.velocityX = 1;
         this.velocityY = 0;
+    }
+
+    private boolean isOppositeDirection(Direction direction) {
+        return switch (this.direction) {
+            case UP -> direction == Direction.DOWN;
+            case DOWN -> direction == Direction.UP;
+            case LEFT -> direction == Direction.RIGHT;
+            case RIGHT -> direction == Direction.LEFT;
+        };
     }
 }

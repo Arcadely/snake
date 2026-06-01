@@ -99,7 +99,7 @@ public class Player {
     }
 
     public Square getHead() {
-        return this.body.getLast();
+        return this.body.getFirst();
     }
 
     public Square getTail() {
