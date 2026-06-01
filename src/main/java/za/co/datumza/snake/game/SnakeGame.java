@@ -1,5 +1,6 @@
 package za.co.datumza.snake.game;
 
+import za.co.datumza.snake.board.Apple;
 import za.co.datumza.snake.board.State;
 import za.co.datumza.snake.player.Player;
 import za.co.datumza.snake.tile.Snake;
@@ -10,18 +11,16 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-import java.util.Random;
+import java.util.List;
 
 public class SnakeGame extends JPanel implements ActionListener, KeyListener {
     protected static final int tileSize = 10;
     private final int REFRESH = 100;
-    private final int MAX_STATES = 5000;
-    private final int STATE_INCREMENT = 10;
+
     private final int SCORE_MULTIPLIER = 5;
     private final boolean isEndless = true;
     private final int boardWidth;
     private final int boardHeight;
-    private final Random random = new Random();
     private final Timer gameLoop = new Timer(REFRESH, this);
 
     private int currentState = 0;
@@ -34,7 +33,7 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
         this.boardWidth = boardWidth;
         this.boardHeight = boardHeight;
 
-        this.state = new State(boardWidth, boardHeight, 4); // todo
+        this.state = new State(boardWidth/tileSize, boardHeight/tileSize, 4, 200); // todo
         this.visualiser = new Visualiser(tileSize); // todo
 
         setupBoard();
@@ -45,8 +44,8 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
 
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
-        // drawGrid(g);
-        drawApple(g);
+//         drawGrid(g);
+        drawApples(g);
         drawPlayers(g);
 
         showData(g);
@@ -67,8 +66,10 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
         }
     }
 
-    private void drawApple(Graphics g) {
-        visualiser.draw(g, Color.green, state.getApple().getPosition());
+    private void drawApples(Graphics g) {
+        for (Apple apple : state.getApples()) {
+            visualiser.draw(g, Color.green, apple.getPosition());
+        }
     }
 
     private void drawGrid(Graphics g) {
@@ -84,25 +85,19 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
         }
 
         state.progress();
-        currentState += STATE_INCREMENT;
     }
 
     private void showData(Graphics g) {
         g.setFont(new Font("Arial", Font.PLAIN, 16));
 
-        showGameState(g);
+        visualiser.drawState(g, state);
 
-//        for (int i = 0; i < snakes.size(); i++) {
-//            showPlayerScore(g, snakes.get(i), i + 1);
-//        }
+        for (Player player : state.getPlayers()) {
+            visualiser.drawPlayerStats(g, Color.red, player);
+        }
     }
 
-    private void showGameState(Graphics g) {
-        String info = isEndless ? String.format("State: %d", currentState) : String.format("State: %d/%d", currentState, MAX_STATES);
 
-        g.setColor(Color.white);
-        g.drawString(info, tileSize, tileSize + 16);
-    }
 
     private void showPlayerScore(Graphics g, Snake snake, int index) {
         String info = isEndless ? String.format("%s: %d", snake.getName(), snake.getMaxPoints() * SCORE_MULTIPLIER) : String.format("%s (%d Lives): %d", snake.getName(), snake.getLives(), snake.getMaxPoints() * SCORE_MULTIPLIER);
@@ -113,18 +108,13 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        if ((isGameOver() || (currentState >= MAX_STATES)) && !isEndless) {
+        if (state.isGameOver() && !isEndless) {
             gameLoop.stop();
             return;
         }
 
         move();
         repaint();
-    }
-
-    private boolean isGameOver() {
-//        return snakes.stream().anyMatch(s -> !s.getIsAlive());
-        return false;
     }
 
     @Override

@@ -6,8 +6,6 @@ import lombok.Setter;
 @Getter
 @Setter
 public class Stats {
-    private final int LENGTH = 2;
-
     private int lives;
     private int length;
     private int longestLength;
@@ -29,7 +27,7 @@ public class Stats {
     }
 
     public void die() {
-        this.length = LENGTH;
+        this.length = 0;
         this.kills = 0;
         --this.lives;
     }

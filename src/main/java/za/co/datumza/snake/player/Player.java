@@ -5,6 +5,8 @@ import za.co.datumza.snake.board.Apple;
 import za.co.datumza.snake.board.Board;
 import za.co.datumza.snake.board.Square;
 
+import java.util.List;
+
 @Getter
 public class Player {
     private int id;
@@ -20,26 +22,35 @@ public class Player {
         this.id = id;
         this.position = position;
         this.movement = new Movement(Direction.random());
+        this.stats = new Stats();
     }
 
     public void changeDirection(Direction direction) {
         this.movement.setDirection(direction);
     }
 
-    public void move(Board board, Apple apple) {
-        if (!isAlive) {
-            this.position = board.getOpenSquare();
-            this.isAlive = true;
-        }
+    public void move(Board board, List<Apple> apples) {
+        try {
+            if (!isAlive) {
+                this.position = board.getOpenSquare();
+                this.isAlive = true;
+            }
 
-        this.position = getNextSquare(board, movement.getDirection());
-        checkCollision(board, apple);
+            this.position = getNextSquare(board, movement.getDirection());
+            eat(apples);
+            checkCollision(board);
+
+        } catch (Exception e) {
+            kill(board);
+        }
     }
 
-    public void eat(Apple apple) {
-        if (position.equals(apple.getPosition())) {
-            this.stats.eat();
-            apple.eat();
+    public void eat(List<Apple> apples) {
+        for (Apple apple : apples) {
+            if (position.equals(apple.getPosition())) {
+                this.stats.eat();
+                apple.eat();
+            }
         }
     }
 
@@ -48,19 +59,23 @@ public class Player {
         this.stats.die();
     }
 
-    public void kill() {
+    public void kill(Board board) {
         this.stats.kill();
+        this.position = board.getOpenSquare();
     }
 
-    public void checkCollision(Board board, Apple apple) {
-        eat(apple);
+    public void checkCollision(Board board) {
+        try {
+            Square square = board.getSquare(position);
 
-        Square square = board.getSquare(position);
-
-        if (square.isBlocked(this.id)) {
-            square.unblock(this.id);
-            kill();
+            if (square.isBlocked(this.id)) {
+                square.unblock(this.id);
+                kill(board);
+            }
+        } catch (Exception e) {
+            kill(board);
         }
+
     }
 
     private Square getNextSquare(Board board, Direction direction) {

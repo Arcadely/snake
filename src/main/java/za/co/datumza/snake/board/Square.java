@@ -39,11 +39,11 @@ public class Square {
     }
 
     public Square getUp(Board board) {
-        return new Square(this.x , this.y - 1);
+        return board.getSquare(this.x , this.y - 1);
     }
 
     public Square getDown(Board board) {
-        return new Square(this.x, this.y + 1);
+        return board.getSquare(this.x, this.y + 1);
     }
 
     public Square getLeft(Board board) {
