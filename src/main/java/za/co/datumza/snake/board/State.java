@@ -1,6 +1,7 @@
 package za.co.datumza.snake.board;
 
 import lombok.Getter;
+import za.co.datumza.snake.player.Direction;
 import za.co.datumza.snake.player.Player;
 
 import java.util.ArrayList;
@@ -61,5 +62,9 @@ public class State {
             Apple apple = new Apple(board.getOpenSquare());
             this.apples.add(apple);
         }
+    }
+
+    public void onKeyPress(Direction direction) {
+        this.players.getFirst().getMovement().setDirection(direction);
     }
 }

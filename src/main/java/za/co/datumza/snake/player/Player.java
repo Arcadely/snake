@@ -41,7 +41,7 @@ public class Player {
             checkCollision(board);
 
         } catch (Exception e) {
-            kill(board);
+            die(board);
         }
     }
 
@@ -54,14 +54,14 @@ public class Player {
         }
     }
 
-    public void die() {
+    public void die(Board board) {
         this.isAlive = false;
         this.stats.die();
+        this.position = board.getOpenSquare();
     }
 
-    public void kill(Board board) {
+    public void kill() {
         this.stats.kill();
-        this.position = board.getOpenSquare();
     }
 
     public void checkCollision(Board board) {
@@ -70,12 +70,11 @@ public class Player {
 
             if (square.isBlocked(this.id)) {
                 square.unblock(this.id);
-                kill(board);
+                die(board);
             }
         } catch (Exception e) {
-            kill(board);
+            die(board);
         }
-
     }
 
     private Square getNextSquare(Board board, Direction direction) {
