@@ -126,7 +126,10 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
         visualiser.drawState(g, state, contentX, stateY);
 
         List<Player> sortedPlayers = state.getPlayers().stream()
-                .sorted(Comparator.comparingInt().reversed())
+                .sorted(Comparator
+                        .<Player>comparingInt(player -> player.getStats().getBestScore()).reversed()
+                        .thenComparing(Comparator.comparingInt((Player player) -> player.getStats().getScore()).reversed())
+                        .thenComparingInt(Player::getId))
                 .toList();
 
         for (int i = 0; i < sortedPlayers.size(); i++) {

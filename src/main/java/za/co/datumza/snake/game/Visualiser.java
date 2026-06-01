@@ -55,7 +55,7 @@ public class Visualiser {
         Stats stats = player.getStats();
         String type = player.isZombie() ? "Zombie" : "Player";
         String info = String.format(
-                "%s%d %s S:%d B:%d L:%d K:%d",
+                "%s%d %s S: %d B: %d L: %d K: %d",
                 player.isZombie() ? "Z" : "P",
                 player.getId(),
                 type,

@@ -13,12 +13,13 @@ import java.util.List;
 public class Player {
     public static final int DEFAULT_SIZE = 6;
 
-    private int id;
-    private PlayerType type;
+    private final int id;
+    private final PlayerType type;
+    private final Stats stats;
+
     private Movement movement;
     private List<Square> body;
     private boolean isAlive = true;
-    private Stats stats;
 
     public Player(int id, PlayerType type, Direction direction, Square position, Board board) {
         this.id = id;
