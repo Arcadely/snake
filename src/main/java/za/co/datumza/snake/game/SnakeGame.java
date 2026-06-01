@@ -16,6 +16,9 @@ import java.awt.event.KeyListener;
 public class SnakeGame extends JPanel implements ActionListener, KeyListener {
     protected static final int tileSize = 10;
     private final int REFRESH = 100;
+    private static final int PLAYER_COUNT = 3;
+    private static final int ZOMBIE_COUNT = 4;
+    private static final int APPLE_COUNT = 6;
     private static final int SCOREBOARD_WIDTH = 300;
     private static final int SCOREBOARD_PADDING = 16;
     private static final int SCOREBOARD_LINE_HEIGHT = 22;
@@ -44,7 +47,7 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
         this.boardWidth = boardWidth;
         this.boardHeight = boardHeight;
 
-        this.state = new State(boardWidth/tileSize, boardHeight/tileSize, 4, 4); // todo
+        this.state = new State(boardWidth/tileSize, boardHeight/tileSize, PLAYER_COUNT, ZOMBIE_COUNT, APPLE_COUNT); // todo
         this.visualiser = new Visualiser(tileSize); // todo
 
         setupBoard();

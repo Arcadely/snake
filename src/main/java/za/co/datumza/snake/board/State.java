@@ -12,9 +12,8 @@ import java.util.List;
 
 @Getter
 public class State {
-    private final int MAX_STATES = 5000;
+    private final int MAX_STATES = 50000;
     private final int STATE_INCREMENT = 1;
-    private static final int ZOMBIE_COUNT = 1;
     private static final int ZOMBIE_MOVE_INTERVAL = 2;
     private static final PathFindingAlgorithm[] CPU_ALGORITHMS = {
             PathFindingAlgorithm.GREEDY,
@@ -27,18 +26,28 @@ public class State {
     private List<Player> players;
     private List<Apple> apples;
     private List<Square> cleanupSquares;
+    private List<Integer> cleanupPlayerIds;
     private CpuPathFinder cpuPathFinder;
+    private int playerCount;
+    private int zombieCount;
     private int currentState;
     private boolean isGameOver;
 
     public State(int boardWidth, int boardHeight, int playerCount, int appleCount) {
+        this(boardWidth, boardHeight, playerCount, 1, appleCount);
+    }
+
+    public State(int boardWidth, int boardHeight, int playerCount, int zombieCount, int appleCount) {
         this.board = new Board(boardWidth, boardHeight);
         this.cleanupSquares = new ArrayList<>();
+        this.cleanupPlayerIds = new ArrayList<>();
         this.cpuPathFinder = new CpuPathFinder();
+        this.playerCount = playerCount;
+        this.zombieCount = zombieCount;
         this.currentState = 0;
         this.isGameOver = false;
 
-        createPlayers(playerCount);
+        createPlayers();
         createApples(appleCount);
     }
 
@@ -57,7 +66,7 @@ public class State {
 
         for (Player player : players) {
             if (!player.isAlive()) {
-                cleanupSquares.addAll(player.getBody());
+                addCleanupSquares(player);
             }
         }
 
@@ -67,11 +76,12 @@ public class State {
             }
         }
 
-        for (Square square : cleanupSquares) {
-            square.getPlayers().clear();
+        for (int i = 0; i < cleanupSquares.size(); i++) {
+            cleanupSquares.get(i).unblock(cleanupPlayerIds.get(i));
         }
 
         cleanupSquares.clear();
+        cleanupPlayerIds.clear();
 
         for (Apple apple : apples) {
             if (apple.isEaten()) {
@@ -82,12 +92,20 @@ public class State {
         currentState += STATE_INCREMENT;
     }
 
-    private void createPlayers(int playerCount) {
+    private void createPlayers() {
         this.players = new ArrayList<>();
+        int totalPlayers = playerCount + zombieCount;
 
-        for (int i = 0; i < playerCount; i++) {
-            PlayerType type = i >= playerCount - ZOMBIE_COUNT ? PlayerType.ZOMBIE : PlayerType.PLAYER;
-            Player player = new Player(i, type, board.getOpenSquare());
+        for (int i = 0; i < totalPlayers; i++) {
+            PlayerType type = i >= playerCount ? PlayerType.ZOMBIE : PlayerType.PLAYER;
+            Direction direction = Direction.random();
+            Player player = new Player(
+                    i,
+                    type,
+                    direction,
+                    board.getOpenSnakeHead(Player.DEFAULT_SIZE, direction),
+                    board
+            );
             this.players.add(player);
         }
     }
@@ -103,6 +121,13 @@ public class State {
 
     public void onKeyPress(Direction direction) {
         this.players.getFirst().getMovement().setDirection(direction);
+    }
+
+    private void addCleanupSquares(Player player) {
+        for (Square square : player.getBody()) {
+            cleanupSquares.add(square);
+            cleanupPlayerIds.add(player.getId());
+        }
     }
 
     private List<Boolean> getMovingPlayers() {
@@ -165,7 +190,7 @@ public class State {
             if (player.isAlive() && nextSquare != null && nextSquare.isBlocked()) {
                 if (player.isZombie()) {
                     awardZombieKills(player, nextSquare);
-                } else {
+                } else if (isLethalPlayerCollision(player, nextSquare)) {
                     player.die(board);
                     awardKills(player, nextSquare);
                 }
@@ -235,17 +260,41 @@ public class State {
 
     private void awardKills(Player victim, Square collisionSquare) {
         for (Integer playerId : collisionSquare.getPlayers()) {
-            if (playerId != victim.getId()) {
-                players.get(playerId).kill();
+            Player killer = players.get(playerId);
+
+            if (killer.getId() == victim.getId()) {
+                continue;
+            }
+
+            if (killer.isZombie() && !killer.getHead().equals(collisionSquare)) {
+                continue;
+            }
+
+            killer.kill();
+        }
+    }
+
+    private boolean isLethalPlayerCollision(Player victim, Square collisionSquare) {
+        for (Integer playerId : collisionSquare.getPlayers()) {
+            Player blocker = players.get(playerId);
+
+            if (blocker.getId() == victim.getId()) {
+                return true;
+            }
+
+            if (blocker.isPlayer() || blocker.getHead().equals(collisionSquare)) {
+                return true;
             }
         }
+
+        return false;
     }
 
     private void awardZombieKills(Player zombie, Square collisionSquare) {
         for (Integer playerId : collisionSquare.getPlayers()) {
             Player victim = players.get(playerId);
 
-            if (victim.isPlayer()) {
+            if (victim.isPlayer() && victim.getHead().equals(collisionSquare)) {
                 victim.die(board);
                 zombie.kill();
             }

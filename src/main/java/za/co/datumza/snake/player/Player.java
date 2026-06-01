@@ -10,6 +10,8 @@ import java.util.List;
 
 @Getter
 public class Player {
+    public static final int DEFAULT_SIZE = 6;
+
     private int id;
     private PlayerType type;
     private Movement movement;
@@ -17,13 +19,13 @@ public class Player {
     private boolean isAlive = true;
     private Stats stats;
 
-    public Player(int id, PlayerType type, Square position) {
+    public Player(int id, PlayerType type, Direction direction, Square position, Board board) {
         this.id = id;
         this.type = type;
-        this.movement = new Movement(Direction.random());
+        this.movement = new Movement(direction);
         this.stats = new Stats();
 
-        initialise(position);
+        initialise(position, board);
     }
 
     public boolean isZombie() {
@@ -41,8 +43,7 @@ public class Player {
     public void handleMove(Board board, List<Apple> apples) {
         try {
             if (!isAlive) {
-                Square head = board.getOpenSquare();
-                initialise(head);
+                respawn(board);
             }
 
             if (isPlayer()) {
@@ -134,11 +135,21 @@ public class Player {
         return this.body.getLast();
     }
 
-    private void initialise(Square head) {
-        head.block(this.id);
+    private void respawn(Board board) {
+        Direction direction = Direction.random();
+        this.movement = new Movement(direction);
+        initialise(board.getOpenSnakeHead(DEFAULT_SIZE, direction), board);
+    }
 
+    private void initialise(Square head, Board board) {
         this.body = new LinkedList<>();
-        this.body.add(head);
+
+        for (int i = 0; i < DEFAULT_SIZE; i++) {
+            Square bodyPart = board.getSnakeBodySquare(head, movement.getDirection(), i);
+            bodyPart.block(this.id);
+            this.body.add(bodyPart);
+        }
+
         this.isAlive = true;
     }
 }
