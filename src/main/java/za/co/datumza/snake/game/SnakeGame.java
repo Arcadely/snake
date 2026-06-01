@@ -16,6 +16,15 @@ import java.awt.event.KeyListener;
 public class SnakeGame extends JPanel implements ActionListener, KeyListener {
     protected static final int tileSize = 10;
     private final int REFRESH = 100;
+    private static final int SCOREBOARD_WIDTH = 220;
+    private static final Color[] PLAYER_COLORS = {
+            new Color(239, 68, 68),
+            new Color(59, 130, 246),
+            new Color(34, 197, 94),
+            new Color(245, 158, 11),
+            new Color(168, 85, 247),
+            new Color(20, 184, 166)
+    };
 
     private final boolean isEndless = true;
     private final int boardWidth;
@@ -41,7 +50,7 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
     }
 
     private void setupBoard() {
-        setPreferredSize(new Dimension(boardWidth, boardHeight));
+        setPreferredSize(new Dimension(boardWidth + SCOREBOARD_WIDTH, boardHeight));
         setBackground(Color.black);
         addKeyListener(this);
         setFocusable(true);
@@ -49,12 +58,17 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
 
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
+        drawMapBackground(g);
 //         drawGrid(g);
+        drawBlockedSquares(g);
         drawApples(g);
         drawPlayers(g);
-        drawBlockedSquares(g);
+        drawScoreboard(g);
+    }
 
-        showData(g);
+    private void drawMapBackground(Graphics g) {
+        g.setColor(Color.black);
+        g.fillRect(0, 0, boardWidth, boardHeight);
     }
 
     private void drawBlockedSquares(Graphics g) {
@@ -66,7 +80,7 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
     private void drawPlayers(Graphics g) {
         for (Player player : state.getPlayers()) {
             if (player.isAlive()) {
-                visualiser.drawPlayer(g, Color.red, player);
+                visualiser.drawPlayer(g, getPlayerColor(player), player);
             }
         }
     }
@@ -84,14 +98,22 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
         }
     }
 
-    private void showData(Graphics g) {
+    private void drawScoreboard(Graphics g) {
+        int scoreboardX = boardWidth;
+        g.setColor(new Color(17, 24, 39));
+        g.fillRect(scoreboardX, 0, SCOREBOARD_WIDTH, boardHeight);
+
         g.setFont(new Font("Arial", Font.PLAIN, 16));
 
-        visualiser.drawState(g, state);
+        visualiser.drawState(g, state, scoreboardX + tileSize, tileSize + 16);
 
         for (Player player : state.getPlayers()) {
-            visualiser.drawPlayerStats(g, Color.red, player);
+            visualiser.drawPlayerStats(g, getPlayerColor(player), player, scoreboardX + tileSize, tileSize + 25 + (22 * player.getId()));
         }
+    }
+
+    private Color getPlayerColor(Player player) {
+        return PLAYER_COLORS[player.getId() % PLAYER_COLORS.length];
     }
 
     private void move() {

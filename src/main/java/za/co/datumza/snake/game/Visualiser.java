@@ -38,6 +38,13 @@ public class Visualiser {
         g.drawString(info, tileSize, tileSize + 16);
     }
 
+    public void drawState(Graphics g, State state, int x, int y) {
+        String info = IS_ENDLESS ? String.format("State: %d", state.getCurrentState()) : String.format("State: %d/%d", state.getCurrentState(), state.getMAX_STATES());
+
+        g.setColor(Color.white);
+        g.drawString(info, x, y);
+    }
+
     public void drawPlayerStats(Graphics g, Color color, Player player) {
         Stats stats = player.getStats();
         String score = stats.getScore(LENGTH_MULTIPLIER, KILL_MULTIPLIER);
@@ -45,6 +52,15 @@ public class Visualiser {
 
         g.setColor(color);
         g.drawString(info, tileSize, tileSize + 25 + (22 * player.getId()));
+    }
+
+    public void drawPlayerStats(Graphics g, Color color, Player player, int x, int y) {
+        Stats stats = player.getStats();
+        String score = stats.getScore(LENGTH_MULTIPLIER, KILL_MULTIPLIER);
+        String info = IS_ENDLESS ? String.format("%s: %s", player.getId(), score) : String.format("%s (%d Lives): %s", player.getId(), stats.getLives(), score);
+
+        g.setColor(color);
+        g.drawString(info, x, y);
     }
 
     public int convert(int value) {
