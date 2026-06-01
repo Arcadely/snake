@@ -10,7 +10,7 @@ import java.util.List;
 @Getter
 public class State {
     private final int MAX_STATES = 5000;
-    private final int STATE_INCREMENT = 10;
+    private final int STATE_INCREMENT = 1;
 
     private Board board;
     private List<Player> players;

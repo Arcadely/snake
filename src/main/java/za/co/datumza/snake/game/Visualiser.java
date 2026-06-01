@@ -40,9 +40,8 @@ public class Visualiser {
 
     public void drawPlayerStats(Graphics g, Color color, Player player) {
         Stats stats = player.getStats();
-        int score = (stats.getLength() * LENGTH_MULTIPLIER) + (stats.getKills() * KILL_MULTIPLIER);
-        int maxScore = (stats.getLongestLength() * LENGTH_MULTIPLIER) + (stats.getMostKills() * KILL_MULTIPLIER);
-        String info = IS_ENDLESS ? String.format("%s: %d", player.getId(), score) : String.format("%s (%d Lives): %d", player.getId(), stats.getLives(), maxScore);
+        String score = stats.getScore(LENGTH_MULTIPLIER, KILL_MULTIPLIER);
+        String info = IS_ENDLESS ? String.format("%s: %s", player.getId(), score) : String.format("%s (%d Lives): %s", player.getId(), stats.getLives(), score);
 
         g.setColor(color);
         g.drawString(info, tileSize, tileSize + 25 + (22 * player.getId()));

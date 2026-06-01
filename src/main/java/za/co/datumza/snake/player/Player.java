@@ -11,7 +11,6 @@ import java.util.List;
 @Getter
 public class Player {
     private int id;
-
     private Movement movement;
     private List<Square> body;
     private boolean isAlive = true;
@@ -45,16 +44,16 @@ public class Player {
     }
 
     public void moveBody(Board board) {
-        Square head = getNextSquare(board, movement.getDirection());
-        head.block(id);
-        this.body.add(head);
+        Square nextHead = getNextSquare(board, movement.getDirection());
+        nextHead.block(id);
+        this.body.addFirst(nextHead);
 
         // Unblocks both tail and next tail since they are the same squares
-        this.body.getFirst().unblock(this.id);
-        this.body.removeFirst();
+        getTail().unblock(this.id);
+        this.body.removeLast();
 
         // Do this because tail and next tail have both been unblocked
-        this.body.getFirst().block(this.id);
+        getTail().block(this.id);
     }
 
     public void eat(List<Apple> apples) {
@@ -63,7 +62,7 @@ public class Player {
 
             if (getHead().equals(applePosition)) {
                 apple.eat(this);
-                this.body.addFirst(applePosition);
+                this.body.add(getTail());
                 this.stats.eat();
             }
         }
@@ -100,6 +99,10 @@ public class Player {
     }
 
     public Square getHead() {
+        return this.body.getLast();
+    }
+
+    public Square getTail() {
         return this.body.getLast();
     }
 
