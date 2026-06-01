@@ -38,9 +38,17 @@ public class Stats {
         this.mostKills = Math.max(this.mostKills, this.kills);
     }
 
+    public int getScoreValue(int lengthMultiplier, int killsMultiplier) {
+        return (this.length * lengthMultiplier) + (this.kills * killsMultiplier);
+    }
+
+    public int getMaxScoreValue(int lengthMultiplier, int killsMultiplier) {
+        return (this.longestLength * lengthMultiplier) + (this.mostKills * killsMultiplier);
+    }
+
     public String getScore(int lengthMultiplier, int killsMultiplier) {
-        int score = (this.length * lengthMultiplier) + (this.kills * killsMultiplier);
-        int maxScore = (this.longestLength * lengthMultiplier) + (this.mostKills * killsMultiplier);
+        int score = getScoreValue(lengthMultiplier, killsMultiplier);
+        int maxScore = getMaxScoreValue(lengthMultiplier, killsMultiplier);
         return String.format("%d %d %d %d %d %d", score, maxScore, this.length, this.longestLength, this.kills,this.mostKills);
     }
 }

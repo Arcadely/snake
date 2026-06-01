@@ -11,17 +11,27 @@ import java.util.List;
 @Getter
 public class Player {
     private int id;
+    private PlayerType type;
     private Movement movement;
     private List<Square> body;
     private boolean isAlive = true;
     private Stats stats;
 
-    public Player(int id, Square position) {
+    public Player(int id, PlayerType type, Square position) {
         this.id = id;
+        this.type = type;
         this.movement = new Movement(Direction.random());
         this.stats = new Stats();
 
         initialise(position);
+    }
+
+    public boolean isZombie() {
+        return type == PlayerType.ZOMBIE;
+    }
+
+    public boolean isPlayer() {
+        return type == PlayerType.PLAYER;
     }
 
     public void changeDirection(Direction direction) {
@@ -35,7 +45,10 @@ public class Player {
                 initialise(head);
             }
 
-            eat(apples);
+            if (isPlayer()) {
+                eat(apples);
+            }
+
             moveBody(board);
 
         } catch (Exception e) {
@@ -69,6 +82,10 @@ public class Player {
     }
 
     public void die(Board board) {
+        if (isZombie()) {
+            return;
+        }
+
         if (!this.isAlive) {
             return;
         }

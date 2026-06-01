@@ -3,6 +3,7 @@ package za.co.datumza.snake.board;
 import lombok.Getter;
 import za.co.datumza.snake.player.Direction;
 import za.co.datumza.snake.player.Player;
+import za.co.datumza.snake.player.PlayerType;
 import za.co.datumza.snake.player.pathfinding.CpuPathFinder;
 import za.co.datumza.snake.player.pathfinding.PathFindingAlgorithm;
 
@@ -13,6 +14,8 @@ import java.util.List;
 public class State {
     private final int MAX_STATES = 5000;
     private final int STATE_INCREMENT = 1;
+    private static final int ZOMBIE_COUNT = 1;
+    private static final int ZOMBIE_MOVE_INTERVAL = 2;
     private static final PathFindingAlgorithm[] CPU_ALGORITHMS = {
             PathFindingAlgorithm.GREEDY,
             PathFindingAlgorithm.BREADTH_FIRST,
@@ -45,9 +48,10 @@ public class State {
             return;
         }
 
-        updateCpuPlayers();
+        List<Boolean> movingPlayers = getMovingPlayers();
+        updateCpuPlayers(movingPlayers);
 
-        List<Square> nextSquares = getNextSquares();
+        List<Square> nextSquares = getNextSquares(movingPlayers);
         checkBlockedSquareCollisions(nextSquares);
         checkHeadOnCollisions(nextSquares);
 
@@ -57,8 +61,10 @@ public class State {
             }
         }
 
-        for (Player player : players) {
-            player.handleMove(board, apples);
+        for (int i = 0; i < players.size(); i++) {
+            if (movingPlayers.get(i)) {
+                players.get(i).handleMove(board, apples);
+            }
         }
 
         for (Square square : cleanupSquares) {
@@ -80,7 +86,8 @@ public class State {
         this.players = new ArrayList<>();
 
         for (int i = 0; i < playerCount; i++) {
-            Player player = new Player(i, board.getOpenSquare());
+            PlayerType type = i >= playerCount - ZOMBIE_COUNT ? PlayerType.ZOMBIE : PlayerType.PLAYER;
+            Player player = new Player(i, type, board.getOpenSquare());
             this.players.add(player);
         }
     }
@@ -98,15 +105,28 @@ public class State {
         this.players.getFirst().getMovement().setDirection(direction);
     }
 
-    private void updateCpuPlayers() {
+    private List<Boolean> getMovingPlayers() {
+        List<Boolean> movingPlayers = new ArrayList<>();
+
+        for (Player player : players) {
+            movingPlayers.add(!player.isZombie() || currentState % ZOMBIE_MOVE_INTERVAL == 0);
+        }
+
+        return movingPlayers;
+    }
+
+    private void updateCpuPlayers(List<Boolean> movingPlayers) {
         for (int i = 1; i < players.size(); i++) {
             Player player = players.get(i);
 
-            if (!player.isAlive()) {
+            if (!movingPlayers.get(i) || !player.isAlive()) {
                 continue;
             }
 
-            Direction direction = cpuPathFinder.chooseDirection(player, board, apples, getCpuAlgorithm(player));
+            Direction direction = player.isZombie()
+                    ? cpuPathFinder.chooseDirectionToClosestPlayer(player, board, players)
+                    : cpuPathFinder.chooseDirection(player, board, apples, getCpuAlgorithm(player));
+
             player.changeDirection(direction);
         }
     }
@@ -115,10 +135,17 @@ public class State {
         return CPU_ALGORITHMS[(player.getId() - 1) % CPU_ALGORITHMS.length];
     }
 
-    private List<Square> getNextSquares() {
+    private List<Square> getNextSquares(List<Boolean> movingPlayers) {
         List<Square> nextSquares = new ArrayList<>();
 
-        for (Player player : players) {
+        for (int i = 0; i < players.size(); i++) {
+            Player player = players.get(i);
+
+            if (!movingPlayers.get(i)) {
+                nextSquares.add(null);
+                continue;
+            }
+
             try {
                 nextSquares.add(player.getNextSquare(board));
             } catch (Exception e) {
@@ -136,8 +163,12 @@ public class State {
             Square nextSquare = nextSquares.get(i);
 
             if (player.isAlive() && nextSquare != null && nextSquare.isBlocked()) {
-                player.die(board);
-                awardKills(player, nextSquare);
+                if (player.isZombie()) {
+                    awardZombieKills(player, nextSquare);
+                } else {
+                    player.die(board);
+                    awardKills(player, nextSquare);
+                }
             }
         }
     }
@@ -170,6 +201,25 @@ public class State {
     }
 
     private void awardHeadOnKills(List<Player> collidingPlayers) {
+        boolean hasZombie = collidingPlayers.stream().anyMatch(Player::isZombie);
+
+        if (hasZombie) {
+            for (Player killer : collidingPlayers) {
+                if (!killer.isZombie()) {
+                    continue;
+                }
+
+                for (Player victim : collidingPlayers) {
+                    if (victim.isPlayer()) {
+                        victim.die(board);
+                        killer.kill();
+                    }
+                }
+            }
+
+            return;
+        }
+
         for (Player victim : collidingPlayers) {
             victim.die(board);
         }
@@ -187,6 +237,17 @@ public class State {
         for (Integer playerId : collisionSquare.getPlayers()) {
             if (playerId != victim.getId()) {
                 players.get(playerId).kill();
+            }
+        }
+    }
+
+    private void awardZombieKills(Player zombie, Square collisionSquare) {
+        for (Integer playerId : collisionSquare.getPlayers()) {
+            Player victim = players.get(playerId);
+
+            if (victim.isPlayer()) {
+                victim.die(board);
+                zombie.kill();
             }
         }
     }

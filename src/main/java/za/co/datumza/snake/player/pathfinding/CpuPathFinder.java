@@ -34,6 +34,16 @@ public class CpuPathFinder {
         };
     }
 
+    public Direction chooseDirectionToClosestPlayer(Player zombie, Board board, List<Player> players) {
+        Square target = findClosestPlayerSquare(zombie, players);
+
+        if (target == null) {
+            return chooseRandomSafeDirection(zombie, board);
+        }
+
+        return chooseAStarDirection(zombie, board, target);
+    }
+
     private Direction chooseRandomSafeDirection(Player player, Board board) {
         List<Direction> safeDirections = getSafeDirections(player, board);
 
@@ -145,6 +155,14 @@ public class CpuPathFinder {
                 .filter(apple -> !apple.isEaten())
                 .map(Apple::getPosition)
                 .min(Comparator.comparingInt(apple -> distance(head, apple)))
+                .orElse(null);
+    }
+
+    private Square findClosestPlayerSquare(Player zombie, List<Player> players) {
+        return players.stream()
+                .filter(player -> player.isPlayer() && player.isAlive())
+                .flatMap(player -> player.getBody().stream())
+                .min(Comparator.comparingInt(square -> distance(zombie.getHead(), square)))
                 .orElse(null);
     }
 

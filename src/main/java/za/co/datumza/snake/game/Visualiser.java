@@ -56,8 +56,17 @@ public class Visualiser {
 
     public void drawPlayerStats(Graphics g, Color color, Player player, int x, int y) {
         Stats stats = player.getStats();
-        String score = stats.getScore(LENGTH_MULTIPLIER, KILL_MULTIPLIER);
-        String info = IS_ENDLESS ? String.format("%s: %s", player.getId(), score) : String.format("%s (%d Lives): %s", player.getId(), stats.getLives(), score);
+        String type = player.isZombie() ? "Zombie" : "Player";
+        String info = String.format(
+                "%s%d %s S:%d B:%d L:%d K:%d",
+                player.isZombie() ? "Z" : "P",
+                player.getId(),
+                type,
+                stats.getScoreValue(LENGTH_MULTIPLIER, KILL_MULTIPLIER),
+                stats.getMaxScoreValue(LENGTH_MULTIPLIER, KILL_MULTIPLIER),
+                stats.getLength(),
+                stats.getKills()
+        );
 
         g.setColor(color);
         g.drawString(info, x, y);

@@ -16,10 +16,11 @@ import java.awt.event.KeyListener;
 public class SnakeGame extends JPanel implements ActionListener, KeyListener {
     protected static final int tileSize = 10;
     private final int REFRESH = 100;
-    private static final int SCOREBOARD_WIDTH = 220;
+    private static final int SCOREBOARD_WIDTH = 300;
     private static final int SCOREBOARD_PADDING = 16;
-    private static final int SCOREBOARD_LINE_HEIGHT = 24;
+    private static final int SCOREBOARD_LINE_HEIGHT = 22;
     private static final int SCOREBOARD_SECTION_GAP = 18;
+    private static final Color ZOMBIE_COLOR = new Color(156, 163, 175);
     private static final Color[] PLAYER_COLORS = {
             new Color(239, 68, 68),
             new Color(59, 130, 246),
@@ -110,7 +111,7 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
         g.setColor(new Color(17, 24, 39));
         g.fillRect(scoreboardX, 0, SCOREBOARD_WIDTH, boardHeight);
 
-        g.setFont(new Font("Arial", Font.PLAIN, 16));
+        g.setFont(new Font("Arial", Font.PLAIN, 14));
 
         visualiser.drawState(g, state, contentX, stateY);
 
@@ -126,6 +127,10 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
     }
 
     private Color getPlayerColor(Player player) {
+        if (player.isZombie()) {
+            return ZOMBIE_COLOR;
+        }
+
         return PLAYER_COLORS[player.getId() % PLAYER_COLORS.length];
     }
 
