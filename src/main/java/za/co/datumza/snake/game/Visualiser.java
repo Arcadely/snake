@@ -11,17 +11,23 @@ import java.awt.*;
 @AllArgsConstructor
 public class Visualiser {
     private int tileSize;
+    private int offsetX;
+    private int offsetY;
     private boolean IS_ENDLESS = false;
-    private int LENGTH_MULTIPLIER = 5;
-    private int KILL_MULTIPLIER = 10;
 
     public Visualiser(int tileSize) {
         this.tileSize = tileSize;
     }
 
+    public Visualiser(int tileSize, int offsetX, int offsetY) {
+        this.tileSize = tileSize;
+        this.offsetX = offsetX;
+        this.offsetY = offsetY;
+    }
+
     public void draw(Graphics g, Color color, Square square) {
         g.setColor(color);
-        g.fillRect(convert(square.getX()), convert(square.getY()), tileSize, tileSize);
+        g.fillRect(convertX(square.getX()), convertY(square.getY()), tileSize, tileSize);
     }
 
     public void drawPlayer(Graphics g, Color color, Player player) {
@@ -45,15 +51,6 @@ public class Visualiser {
         g.drawString(info, x, y);
     }
 
-    public void drawPlayerStats(Graphics g, Color color, Player player) {
-        Stats stats = player.getStats();
-        String score = stats.getScore(LENGTH_MULTIPLIER, KILL_MULTIPLIER);
-        String info = IS_ENDLESS ? String.format("%s: %s", player.getId(), score) : String.format("%s (%d Lives): %s", player.getId(), stats.getLives(), score);
-
-        g.setColor(color);
-        g.drawString(info, tileSize, tileSize + 25 + (22 * player.getId()));
-    }
-
     public void drawPlayerStats(Graphics g, Color color, Player player, int x, int y) {
         Stats stats = player.getStats();
         String type = player.isZombie() ? "Zombie" : "Player";
@@ -62,8 +59,8 @@ public class Visualiser {
                 player.isZombie() ? "Z" : "P",
                 player.getId(),
                 type,
-                stats.getScoreValue(LENGTH_MULTIPLIER, KILL_MULTIPLIER),
-                stats.getMaxScoreValue(LENGTH_MULTIPLIER, KILL_MULTIPLIER),
+                stats.getScore(),
+                stats.getBestScore(),
                 stats.getLength(),
                 stats.getKills()
         );
@@ -74,5 +71,13 @@ public class Visualiser {
 
     public int convert(int value) {
         return value * tileSize;
+    }
+
+    public int convertX(int value) {
+        return offsetX + convert(value);
+    }
+
+    public int convertY(int value) {
+        return offsetY + convert(value);
     }
 }

@@ -6,6 +6,9 @@ import lombok.Setter;
 @Getter
 @Setter
 public class Stats {
+    private int LENGTH_MULTIPLIER = 1;
+    private int KILL_MULTIPLIER = 3;
+
     private int score;
     private int bestScore;
     private int lives;
@@ -25,19 +28,18 @@ public class Stats {
     }
 
     public void eat() {
-        ++this.score;
         ++this.length;
-
-        this.bestScore = Math.max(this.score, this.bestScore);
         this.longestLength = Math.max(this.length, this.longestLength);
+        calculateScore();
     }
 
     public void poison() {
-        --this.score;
         this.length = Math.max(0, this.length - 1);
+        this.score = (this.length * LENGTH_MULTIPLIER) + (this.kills * KILL_MULTIPLIER);
     }
 
     public void die() {
+        this.score = 0;
         this.length = 0;
         this.kills = 0;
         --this.lives;
@@ -45,21 +47,16 @@ public class Stats {
 
     public void kill() {
         ++this.kills;
-
         this.mostKills = Math.max(this.mostKills, this.kills);
+        calculateScore();
     }
 
-    public int getScoreValue(int lengthMultiplier, int killsMultiplier) {
-        return this.score + (this.kills * killsMultiplier);
+    public String getScoreString() {
+        return String.format("%d %d %d %d %d %d", this.score, this.bestScore, this.length, this.longestLength, this.kills,this.mostKills);
     }
 
-    public int getMaxScoreValue(int lengthMultiplier, int killsMultiplier) {
-        return this.bestScore + (this.mostKills * killsMultiplier);
-    }
-
-    public String getScore(int lengthMultiplier, int killsMultiplier) {
-        int score = getScoreValue(lengthMultiplier, killsMultiplier);
-        int maxScore = getMaxScoreValue(lengthMultiplier, killsMultiplier);
-        return String.format("%d %d %d %d %d %d", score, maxScore, this.length, this.longestLength, this.kills,this.mostKills);
+    private void calculateScore() {
+        this.score = (this.length * LENGTH_MULTIPLIER) + (this.kills * KILL_MULTIPLIER);
+        this.bestScore = Math.max(this.bestScore, this.score);
     }
 }

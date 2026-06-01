@@ -6,8 +6,8 @@ import javax.swing.*;
 
 public class App {
     static void main(String[] args) throws Exception {
-        final int BOARD_WIDTH = 800;
-        final int BOARD_HEIGHT = 800;
+        final int BOARD_WIDTH = 600;
+        final int BOARD_HEIGHT = 600;
         final String NAME = "Snake";
 
         JFrame frame = new JFrame(NAME);
