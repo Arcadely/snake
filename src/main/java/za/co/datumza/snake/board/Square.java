@@ -34,8 +34,8 @@ public class Square {
         return this.players.isEmpty();
     }
 
-    public boolean isBlocked(int player) {
-        return this.players.size() > 1 || (this.players.size() == 1 && !this.players.contains(player));
+    public boolean isBlocked() {
+        return !this.players.isEmpty();
     }
 
     public Square getUp(Board board) {

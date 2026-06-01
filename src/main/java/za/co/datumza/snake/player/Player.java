@@ -81,7 +81,7 @@ public class Player {
         try {
             Square nextSquare = getNextSquare(board, movement.getDirection());
 
-            if (nextSquare.isBlocked(this.id)) {
+            if (nextSquare.isBlocked()) {
                 die(board);
             }
         } catch (Exception e) {
