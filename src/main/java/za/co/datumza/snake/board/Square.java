@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 @Getter
@@ -59,5 +60,10 @@ public class Square {
         if (o == null || getClass() != o.getClass()) return false;
         Square square = (Square) o;
         return this.x == square.x && this.y == square.y;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(x, y);
     }
 }

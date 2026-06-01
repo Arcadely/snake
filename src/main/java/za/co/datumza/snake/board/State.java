@@ -3,6 +3,8 @@ package za.co.datumza.snake.board;
 import lombok.Getter;
 import za.co.datumza.snake.player.Direction;
 import za.co.datumza.snake.player.Player;
+import za.co.datumza.snake.player.pathfinding.CpuPathFinder;
+import za.co.datumza.snake.player.pathfinding.PathFindingAlgorithm;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,17 +13,25 @@ import java.util.List;
 public class State {
     private final int MAX_STATES = 5000;
     private final int STATE_INCREMENT = 1;
+    private static final PathFindingAlgorithm[] CPU_ALGORITHMS = {
+            PathFindingAlgorithm.GREEDY,
+            PathFindingAlgorithm.BREADTH_FIRST,
+            PathFindingAlgorithm.A_STAR,
+            PathFindingAlgorithm.RANDOM_SAFE
+    };
 
     private Board board;
     private List<Player> players;
     private List<Apple> apples;
     private List<Square> cleanupSquares;
+    private CpuPathFinder cpuPathFinder;
     private int currentState;
     private boolean isGameOver;
 
     public State(int boardWidth, int boardHeight, int playerCount, int appleCount) {
         this.board = new Board(boardWidth, boardHeight);
         this.cleanupSquares = new ArrayList<>();
+        this.cpuPathFinder = new CpuPathFinder();
         this.currentState = 0;
         this.isGameOver = false;
 
@@ -34,6 +44,8 @@ public class State {
             this.isGameOver = true;
             return;
         }
+
+        updateCpuPlayers();
 
         List<Square> nextSquares = getNextSquares();
         checkBlockedSquareCollisions(nextSquares);
@@ -84,6 +96,23 @@ public class State {
 
     public void onKeyPress(Direction direction) {
         this.players.getFirst().getMovement().setDirection(direction);
+    }
+
+    private void updateCpuPlayers() {
+        for (int i = 1; i < players.size(); i++) {
+            Player player = players.get(i);
+
+            if (!player.isAlive()) {
+                continue;
+            }
+
+            Direction direction = cpuPathFinder.chooseDirection(player, board, apples, getCpuAlgorithm(player));
+            player.changeDirection(direction);
+        }
+    }
+
+    private PathFindingAlgorithm getCpuAlgorithm(Player player) {
+        return CPU_ALGORITHMS[(player.getId() - 1) % CPU_ALGORITHMS.length];
     }
 
     private List<Square> getNextSquares() {

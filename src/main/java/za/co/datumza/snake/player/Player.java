@@ -100,7 +100,7 @@ public class Player {
         return getNextSquare(board, movement.getDirection());
     }
 
-    private Square getNextSquare(Board board, Direction direction) {
+    public Square getNextSquare(Board board, Direction direction) {
         return switch (direction) {
             case UP -> getHead().getUp(board);
             case DOWN -> getHead().getDown(board);
