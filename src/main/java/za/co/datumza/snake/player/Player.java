@@ -5,6 +5,7 @@ import za.co.datumza.snake.board.Apple;
 import za.co.datumza.snake.board.Board;
 import za.co.datumza.snake.board.Square;
 
+import java.util.LinkedList;
 import java.util.List;
 
 @Getter
@@ -12,44 +13,58 @@ public class Player {
     private int id;
 
     private Movement movement;
-    private Square position;
+    private List<Square> body;
     private boolean isAlive = true;
     private Stats stats;
 
     public Player(int id, Square position) {
-        position.block(id);
-
         this.id = id;
-        this.position = position;
         this.movement = new Movement(Direction.random());
         this.stats = new Stats();
+
+        initialise(position);
     }
 
     public void changeDirection(Direction direction) {
         this.movement.setDirection(direction);
     }
 
-    public void move(Board board, List<Apple> apples) {
+    public void handleMove(Board board, List<Apple> apples) {
         try {
             if (!isAlive) {
-                this.position = board.getOpenSquare();
-                this.isAlive = true;
+                Square head = board.getOpenSquare();
+                initialise(head);
             }
 
-            this.position = getNextSquare(board, movement.getDirection());
             eat(apples);
-            checkCollision(board);
+            moveBody(board);
 
         } catch (Exception e) {
             die(board);
         }
     }
 
+    public void moveBody(Board board) {
+        Square head = getNextSquare(board, movement.getDirection());
+        head.block(id);
+        this.body.add(head);
+
+        // Unblocks both tail and next tail since they are the same squares
+        this.body.getFirst().unblock(this.id);
+        this.body.removeFirst();
+
+        // Do this because tail and next tail have both been unblocked
+        this.body.getFirst().block(this.id);
+    }
+
     public void eat(List<Apple> apples) {
         for (Apple apple : apples) {
-            if (position.equals(apple.getPosition())) {
+            Square applePosition = apple.getPosition();
+
+            if (getHead().equals(applePosition)) {
+                apple.eat(this);
+                this.body.addFirst(applePosition);
                 this.stats.eat();
-                apple.eat();
             }
         }
     }
@@ -57,7 +72,6 @@ public class Player {
     public void die(Board board) {
         this.isAlive = false;
         this.stats.die();
-        this.position = board.getOpenSquare();
     }
 
     public void kill() {
@@ -66,10 +80,9 @@ public class Player {
 
     public void checkCollision(Board board) {
         try {
-            Square square = board.getSquare(position);
+            Square nextSquare = getNextSquare(board, movement.getDirection());
 
-            if (square.isBlocked(this.id)) {
-                square.unblock(this.id);
+            if (nextSquare.isBlocked(this.id)) {
                 die(board);
             }
         } catch (Exception e) {
@@ -79,10 +92,22 @@ public class Player {
 
     private Square getNextSquare(Board board, Direction direction) {
         return switch (direction) {
-            case UP -> position.getUp(board);
-            case DOWN -> position.getDown(board);
-            case LEFT -> position.getLeft(board);
-            case RIGHT -> position.getRight(board);
+            case UP -> getHead().getUp(board);
+            case DOWN -> getHead().getDown(board);
+            case LEFT -> getHead().getLeft(board);
+            case RIGHT -> getHead().getRight(board);
         };
+    }
+
+    public Square getHead() {
+        return this.body.getLast();
+    }
+
+    private void initialise(Square head) {
+        head.block(this.id);
+
+        this.body = new LinkedList<>();
+        this.body.add(head);
+        this.isAlive = true;
     }
 }

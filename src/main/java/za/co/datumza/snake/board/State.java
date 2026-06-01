@@ -15,11 +15,13 @@ public class State {
     private Board board;
     private List<Player> players;
     private List<Apple> apples;
+    private List<Square> cleanupSquares;
     private int currentState;
     private boolean isGameOver;
 
     public State(int boardWidth, int boardHeight, int playerCount, int appleCount) {
         this.board = new Board(boardWidth, boardHeight);
+        this.cleanupSquares = new ArrayList<>();
         this.currentState = 0;
         this.isGameOver = false;
 
@@ -34,7 +36,19 @@ public class State {
         }
 
         for (Player player : players) {
-            player.move(board, apples);
+            player.checkCollision(board);
+
+            if (!player.isAlive()) {
+                cleanupSquares.addAll(player.getBody());
+            }
+        }
+
+        for (Player player : players) {
+            player.handleMove(board, apples);
+        }
+
+        for (Square square : cleanupSquares) {
+            square.getPlayers().clear();
         }
 
         for (Apple apple : apples) {

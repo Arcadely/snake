@@ -1,6 +1,7 @@
 package za.co.datumza.snake.board;
 
 import lombok.Getter;
+import za.co.datumza.snake.player.Player;
 
 @Getter
 public class Apple {
@@ -21,8 +22,9 @@ public class Apple {
         resetTimer();
     }
 
-    public void eat() {
+    public void eat(Player player) {
         this.isEaten = true;
+        position.block(player.getId());
     }
 
     private void resetTimer() {

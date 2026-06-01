@@ -63,10 +63,17 @@ public class Board {
         }
     }
 
-    private List<Square> getOpenSquares() {
+    public List<Square> getOpenSquares() {
         return rows.stream()
                 .flatMap(List::stream)
                 .filter(Square::isOpen)
+                .toList();
+    }
+
+    public List<Square> getBlockedSquares() {
+        return rows.stream()
+                .flatMap(List::stream)
+                .filter(square -> !square.isOpen())
                 .toList();
     }
 }

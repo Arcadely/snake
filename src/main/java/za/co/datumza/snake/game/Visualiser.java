@@ -24,6 +24,13 @@ public class Visualiser {
         g.fillRect(convert(square.getX()), convert(square.getY()), tileSize, tileSize);
     }
 
+    public void drawPlayer(Graphics g, Color color, Player player) {
+        draw(g, color, player.getHead());
+        for (Square square : player.getBody()) {
+            draw(g, color, square);
+        }
+    }
+
     public void drawState(Graphics g, State state) {
         String info = IS_ENDLESS ? String.format("State: %d", state.getCurrentState()) : String.format("State: %d/%d", state.getCurrentState(), state.getMAX_STATES());
 

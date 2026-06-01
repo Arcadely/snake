@@ -1,6 +1,7 @@
 package za.co.datumza.snake.game;
 
 import za.co.datumza.snake.board.Apple;
+import za.co.datumza.snake.board.Square;
 import za.co.datumza.snake.board.State;
 import za.co.datumza.snake.player.Direction;
 import za.co.datumza.snake.player.Player;
@@ -51,14 +52,21 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
 //         drawGrid(g);
         drawApples(g);
         drawPlayers(g);
+        drawBlockedSquares(g);
 
         showData(g);
+    }
+
+    private void drawBlockedSquares(Graphics g) {
+        for (Square square : state.getBoard().getBlockedSquares()) {
+            visualiser.draw(g, Color.yellow, square);
+        }
     }
 
     private void drawPlayers(Graphics g) {
         for (Player player : state.getPlayers()) {
             if (player.isAlive()) {
-                visualiser.draw(g, Color.red, player.getPosition());
+                visualiser.drawPlayer(g, Color.red, player);
             }
         }
     }
