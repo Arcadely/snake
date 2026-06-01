@@ -35,9 +35,11 @@ public class State {
             return;
         }
 
-        for (Player player : players) {
-            player.checkCollision(board);
+        List<Square> nextSquares = getNextSquares();
+        checkBlockedSquareCollisions(nextSquares);
+        checkHeadOnCollisions(nextSquares);
 
+        for (Player player : players) {
             if (!player.isAlive()) {
                 cleanupSquares.addAll(player.getBody());
             }
@@ -82,5 +84,81 @@ public class State {
 
     public void onKeyPress(Direction direction) {
         this.players.getFirst().getMovement().setDirection(direction);
+    }
+
+    private List<Square> getNextSquares() {
+        List<Square> nextSquares = new ArrayList<>();
+
+        for (Player player : players) {
+            try {
+                nextSquares.add(player.getNextSquare(board));
+            } catch (Exception e) {
+                player.die(board);
+                nextSquares.add(null);
+            }
+        }
+
+        return nextSquares;
+    }
+
+    private void checkBlockedSquareCollisions(List<Square> nextSquares) {
+        for (int i = 0; i < players.size(); i++) {
+            Player player = players.get(i);
+            Square nextSquare = nextSquares.get(i);
+
+            if (player.isAlive() && nextSquare != null && nextSquare.isBlocked()) {
+                player.die(board);
+                awardKills(player, nextSquare);
+            }
+        }
+    }
+
+    private void checkHeadOnCollisions(List<Square> nextSquares) {
+        for (int i = 0; i < players.size(); i++) {
+            Player player = players.get(i);
+            Square nextSquare = nextSquares.get(i);
+
+            if (!player.isAlive() || nextSquare == null) {
+                continue;
+            }
+
+            List<Player> collidingPlayers = new ArrayList<>();
+            collidingPlayers.add(player);
+
+            for (int j = i + 1; j < players.size(); j++) {
+                Player otherPlayer = players.get(j);
+                Square otherNextSquare = nextSquares.get(j);
+
+                if (otherPlayer.isAlive() && nextSquare.equals(otherNextSquare)) {
+                    collidingPlayers.add(otherPlayer);
+                }
+            }
+
+            if (collidingPlayers.size() > 1) {
+                awardHeadOnKills(collidingPlayers);
+            }
+        }
+    }
+
+    private void awardHeadOnKills(List<Player> collidingPlayers) {
+        for (Player victim : collidingPlayers) {
+            victim.die(board);
+        }
+
+        for (Player killer : collidingPlayers) {
+            for (Player victim : collidingPlayers) {
+                if (killer.getId() != victim.getId()) {
+                    killer.kill();
+                }
+            }
+        }
+    }
+
+    private void awardKills(Player victim, Square collisionSquare) {
+        for (Integer playerId : collisionSquare.getPlayers()) {
+            if (playerId != victim.getId()) {
+                players.get(playerId).kill();
+            }
+        }
     }
 }

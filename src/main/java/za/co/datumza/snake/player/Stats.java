@@ -41,6 +41,6 @@ public class Stats {
     public String getScore(int lengthMultiplier, int killsMultiplier) {
         int score = (this.length * lengthMultiplier) + (this.kills * killsMultiplier);
         int maxScore = (this.longestLength * lengthMultiplier) + (this.mostKills * killsMultiplier);
-        return String.format("%d %d %d %d %d %d", score, maxScore, this.length, this.kills, this.longestLength * lengthMultiplier, this.mostKills * killsMultiplier);
+        return String.format("%d %d %d %d %d %d", score, maxScore, this.length, this.longestLength, this.kills,this.mostKills);
     }
 }

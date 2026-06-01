@@ -69,6 +69,10 @@ public class Player {
     }
 
     public void die(Board board) {
+        if (!this.isAlive) {
+            return;
+        }
+
         this.isAlive = false;
         this.stats.die();
     }
@@ -77,16 +81,23 @@ public class Player {
         this.stats.kill();
     }
 
-    public void checkCollision(Board board) {
+    public Square checkCollision(Board board) {
         try {
-            Square nextSquare = getNextSquare(board, movement.getDirection());
+            Square nextSquare = getNextSquare(board);
 
             if (nextSquare.isBlocked()) {
                 die(board);
+                return nextSquare;
             }
         } catch (Exception e) {
             die(board);
         }
+
+        return null;
+    }
+
+    public Square getNextSquare(Board board) {
+        return getNextSquare(board, movement.getDirection());
     }
 
     private Square getNextSquare(Board board, Direction direction) {
